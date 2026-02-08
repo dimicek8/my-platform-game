@@ -7,6 +7,23 @@ int buffer_width;
 int buffer_height;
 void* buffer_memory;
 
+float player_x = 100;
+float player_y = 100;
+
+int playerWidth = 30;
+int playerHeight = 30;
+
+float velocity_x = 0;
+float velocity_y = 0;
+float gravity = 0.05f;
+
+const float offset_x = 0.3f;
+const float offset_y = 0.3f;
+
+const int backgroundColor = 0x000000;
+const int playerColor = 0x00FF00;
+const int platformColor = 0xFF0000;
+
 struct
 {
     int left;
@@ -14,6 +31,19 @@ struct
     int up;
     int down;
 } input;
+
+struct Platform
+{
+    int x, y, width, height;
+};
+
+struct Platform platforms[] = {
+    {200, 400, 200, 30}, 
+    {500, 250, 150, 30}, 
+    {50, 300, 100, 30}, 
+    {600, 500, 200, 30}};
+
+int platform_count = sizeof(platforms) / sizeof(platforms[0]);
 
 BITMAPINFO buffer_bitmap_info;
 
@@ -41,22 +71,52 @@ void ResizeDIBSection(int width, int height)
     buffer_memory = VirtualAlloc(0, bitmap_memory_size, MEM_COMMIT, PAGE_READWRITE);
 }
 
-void RenderWeirdGradient(int x_offset, int y_offset)
+void DrawRect(int x, int y, int width, int height, unsigned int color)
 {
-    unsigned int* pixel = (unsigned int*)buffer_memory;
-    int width = buffer_width;
-    int height = buffer_height;
+    int x0 = x;
+    int x1 = x + width;
+    int y0 = y;
+    int y1 = y + height;
 
-    for (int y = 0; y < height; y++)
+    if (x0 < 0)
     {
-        for (int x = 0; x < width; x++)
-        {
-            unsigned char green = (x + x_offset);
-            unsigned char blue = (y + y_offset);
+        x0 = 0;
+    }
+    if (x1 > buffer_width)
+    {
+        x1 = buffer_width;
+    }
+    if (y0 < 0)
+    {
+        y0 = 0;
+    }
+    if (y1 > buffer_height)
+    {
+        y1 = 0;
+    }
 
-            *pixel++ = (0 << 16) | (green << 8) | blue;
+    for (int py = y0; py < y1; py++)
+    {
+        unsigned int* row = (unsigned int*)buffer_memory + (py * buffer_width);
+
+        for (int px = x0; px < x1; px++)
+        {
+            unsigned int* pixel = row + px;
+            *pixel = color;
         }
     }
+}
+
+void RenderGame()
+{
+    DrawRect(0, 0, buffer_width, buffer_height, backgroundColor);
+
+    for (int i = 0; i < platform_count; i++)
+    {
+        DrawRect(platforms[i].x, platforms[i].y, platforms[i].width, platforms[i].height, platformColor);
+    }
+
+    DrawRect((int)player_x, (int)player_y, playerWidth, playerHeight, playerColor);
 }
 
 void Win32UpdateWindow(HDC device_context, int window_width, int window_height)
@@ -140,7 +200,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     ResizeDIBSection(main_window_width, main_window_height);
 
     int running = 1;
-    int x_offset = 0;
+    int on_ground = 0;
 
     while (running)
     {
@@ -156,16 +216,85 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
             DispatchMessage(&msg);
         }
 
+        velocity_y += gravity;
+        velocity_x = 0;
+
         if (input.left)
         {
-            x_offset -= 5;
+            velocity_x = -offset_x;
         }
         if (input.right)
         {
-            x_offset += 5;
+            velocity_x = +offset_x;
+        }
+        if (input.up && on_ground)
+        {
+            velocity_y = -5.0f;
+            on_ground = 0;
         }
 
-        RenderWeirdGradient(x_offset, 0);
+        player_x += velocity_x;
+
+        for (int i = 0; i < platform_count; i++)
+        {
+            struct Platform p = platforms[i];
+
+            if (player_x + playerWidth > p.x && player_x < p.x + p.width &&
+                player_y + playerHeight > p.y && player_y < p.y + p.height)
+            {
+                if (velocity_x > 0)
+                {
+                    player_x = p.x - playerWidth;
+                }
+                else if (velocity_x < 0)
+                {
+                    player_x = p.x + p.width;
+                }
+
+                velocity_x = 0;
+            }
+        }
+
+        player_y += velocity_y;
+
+        for (int i = 0; i < platform_count; i++)
+        {
+            struct Platform p = platforms[i];
+
+            if (player_x + playerWidth > p.x && player_x < p.x + p.width && 
+                player_y + playerHeight > p.y && player_y < p.y + p.height)
+            {
+                if (velocity_y > 0)
+                {
+                    player_y = p.y - playerHeight;
+                    velocity_y = 0;
+                    on_ground = 1;
+                }
+                else if (velocity_y < 0)
+                {
+                    player_y = p.y + p.height;
+                    velocity_y = 0;
+                }
+            }
+        }
+
+        if (player_y > 500)
+        {
+            player_y = 500;
+            on_ground = 1;
+            velocity_y = 0;
+        }
+
+        if (player_x < 0)
+        {
+            player_x = 0;
+        }
+        if (player_x > 770)
+        {
+            player_x = 770;
+        }
+
+        RenderGame();
 
         RECT client_rect;
         GetClientRect(hwnd, &client_rect);

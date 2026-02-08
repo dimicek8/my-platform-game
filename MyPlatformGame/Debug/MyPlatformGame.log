@@ -1,2 +1,6 @@
 ﻿  main.c
+C:\Users\madif\Documents\PlatformGame\MyPlatformGame\MyPlatformGame\main.c(247,49): warning C4244: =: int se převádí na float; může dojít ke ztrátě dat.
+C:\Users\madif\Documents\PlatformGame\MyPlatformGame\MyPlatformGame\main.c(251,45): warning C4244: =: int se převádí na float; může dojít ke ztrátě dat.
+C:\Users\madif\Documents\PlatformGame\MyPlatformGame\MyPlatformGame\main.c(269,50): warning C4244: =: int se převádí na float; může dojít ke ztrátě dat.
+C:\Users\madif\Documents\PlatformGame\MyPlatformGame\MyPlatformGame\main.c(275,46): warning C4244: =: int se převádí na float; může dojít ke ztrátě dat.
   MyPlatformGame.vcxproj -> C:\Users\madif\Documents\PlatformGame\MyPlatformGame\Debug\MyPlatformGame.exe
