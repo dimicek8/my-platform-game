@@ -1,10 +1,9 @@
 ﻿  main.c
-C:\Users\madif\Documents\PlatformGame\MyPlatformGame\MyPlatformGame\main.c(138,43): warning C4244: funkce: float se převádí na int; může dojít ke ztrátě dat.
-C:\Users\madif\Documents\PlatformGame\MyPlatformGame\MyPlatformGame\main.c(157,38): warning C4244: funkce: float se převádí na int; může dojít ke ztrátě dat.
-C:\Users\madif\Documents\PlatformGame\MyPlatformGame\MyPlatformGame\main.c(295,49): warning C4244: =: int se převádí na float; může dojít ke ztrátě dat.
-C:\Users\madif\Documents\PlatformGame\MyPlatformGame\MyPlatformGame\main.c(299,45): warning C4244: =: int se převádí na float; může dojít ke ztrátě dat.
-C:\Users\madif\Documents\PlatformGame\MyPlatformGame\MyPlatformGame\main.c(317,50): warning C4244: =: int se převádí na float; může dojít ke ztrátě dat.
-C:\Users\madif\Documents\PlatformGame\MyPlatformGame\MyPlatformGame\main.c(323,46): warning C4244: =: int se převádí na float; může dojít ke ztrátě dat.
-C:\Users\madif\Documents\PlatformGame\MyPlatformGame\MyPlatformGame\main.c(345,31): warning C4133: funkce: nekompatibilní typy – z: char [64] na: LPWSTR
-C:\Users\madif\Documents\PlatformGame\MyPlatformGame\MyPlatformGame\main.c(346,42): warning C4133: funkce: nekompatibilní typy – z: char [64] na: LPCWSTR
+C:\Users\madif\Documents\PlatformGame\MyPlatformGame\MyPlatformGame\main.c(386,49): warning C4244: =: int se převádí na float; může dojít ke ztrátě dat.
+C:\Users\madif\Documents\PlatformGame\MyPlatformGame\MyPlatformGame\main.c(390,45): warning C4244: =: int se převádí na float; může dojít ke ztrátě dat.
+C:\Users\madif\Documents\PlatformGame\MyPlatformGame\MyPlatformGame\main.c(408,50): warning C4244: =: int se převádí na float; může dojít ke ztrátě dat.
+C:\Users\madif\Documents\PlatformGame\MyPlatformGame\MyPlatformGame\main.c(414,46): warning C4244: =: int se převádí na float; může dojít ke ztrátě dat.
+C:\Users\madif\Documents\PlatformGame\MyPlatformGame\MyPlatformGame\main.c(436,31): warning C4133: funkce: nekompatibilní typy – z: char [64] na: LPWSTR
+C:\Users\madif\Documents\PlatformGame\MyPlatformGame\MyPlatformGame\main.c(437,42): warning C4133: funkce: nekompatibilní typy – z: char [64] na: LPCWSTR
+C:\Users\madif\Documents\PlatformGame\MyPlatformGame\MyPlatformGame\main.c(327,1): warning C4244: inicializování: ULONGLONG se převádí na DWORD; může dojít ke ztrátě dat.
   MyPlatformGame.vcxproj -> C:\Users\madif\Documents\PlatformGame\MyPlatformGame\Debug\MyPlatformGame.exe

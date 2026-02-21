@@ -11,8 +11,8 @@ float player_x = 100;
 float player_y = 100;
 float camera_x = 0;
 
-int playerWidth = 30;
-int playerHeight = 30;
+int playerWidth = 36;
+int playerHeight = 36;
 
 float velocity_x = 0;
 float velocity_y = 0;
@@ -25,6 +25,23 @@ const int backgroundColor = 0x000000;
 const int playerColor = 0x00FF00;
 const int platformColor = 0xFF0000;
 const int coinColor = 0xFFFF00;
+
+const char* character_pixels[] = {"....RRRRR...",
+    "...RRRRRRRR.",
+    "...HHHSSH...",
+    "..HSHSSSHH..",
+    "..HSHHSSSH..",
+    "..HSSSSS....",
+    "...RRBRR....",
+    "..RRRBRRR...",
+    "..RRBBRR....",
+    "..BBBBBB....",
+    "..HH..HH....",
+    ".HH....HH..."};
+
+const int character_sprite_w = 12;
+const int character_sprite_h = 12;
+int pixel_scale = 3;
 
 struct
 {
@@ -66,6 +83,9 @@ struct Coin coins[] = {
 
 int coin_count = sizeof(coins) / sizeof(coins[0]);
 int score = 0;
+
+int flag_x = 1800;
+int game_won = 0;
 
 BITMAPINFO buffer_bitmap_info;
 
@@ -129,17 +149,59 @@ void DrawRect(int x, int y, int width, int height, unsigned int color)
     }
 }
 
+void DrawCharacterSprite(int x, int y)
+{
+    for (int row = 0; row < character_sprite_h; row++)
+    {
+        for (int col = 0; col < character_sprite_w; col++)
+        {
+            char c = character_pixels[row][col];
+
+            unsigned int color = 0;
+            int draw = 1;
+
+            switch (c)
+            {
+            case 'R':
+                color = 0x00FF0000;
+                break;
+            case 'B':
+                color = 0x000000FF;
+                break;
+            case 'S':
+                color = 0x00FFCCAA;
+                break;
+            case 'H':
+                color = 0x00884400;
+                break;
+            default:
+                draw = 0;
+                break;
+            }
+
+            if (draw)
+            {
+                DrawRect(x + (col * pixel_scale), //
+                    y + (row * pixel_scale),      //
+                    pixel_scale,
+                    pixel_scale,
+                    color);
+            }
+        }
+    }
+}
+
 void RenderGame()
 {
     DrawRect(0, 0, buffer_width, buffer_height, backgroundColor);
 
     for (int i = 0; i < platform_count; i++)
     {
-        DrawRect(platforms[i].x - camera_x, //
-            platforms[i].y,                 //
-            platforms[i].width,             //
-            platforms[i].height,            //
-            platformColor);                 //
+        DrawRect(platforms[i].x - (int)camera_x, //
+            platforms[i].y,                      //
+            platforms[i].width,                  //
+            platforms[i].height,                 //
+            platformColor);                      //
     }
 
     for (int i = 0; i < coin_count; i++)
@@ -154,11 +216,26 @@ void RenderGame()
         }
     }
 
-    DrawRect((int)player_x - camera_x, //
-        (int)player_y,                 //
-        playerWidth,                   //
-        playerHeight,                  //
-        playerColor);                  //
+    DrawRect(                   //
+        flag_x - (int)camera_x, //
+        100,                    //
+        10,                     //
+        400,
+        0xAAAAAA //
+    );
+
+    DrawRect(                   //
+        flag_x - (int)camera_x, //
+        120,                    //
+        40,                     //
+        30,                     //
+        0x0000FF                //
+    );
+
+    DrawCharacterSprite(               //
+        (int)player_x - (int)camera_x, //
+        (int)player_y                  //
+    );
 }
 
 void Win32UpdateWindow(HDC device_context, int window_width, int window_height)
@@ -247,6 +324,10 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
     ResizeDIBSection(main_window_width, main_window_height);
 
+    DWORD last_fps_time = GetTickCount64();
+    int frames_this_second = 0;
+    int current_fps = 0;
+
     int running = 1;
     int on_ground = 0;
 
@@ -267,18 +348,28 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
         velocity_y += gravity;
         velocity_x = 0;
 
-        if (input.left)
+        if (game_won == 0)
         {
-            velocity_x = -offset_x;
+            if (input.left)
+            {
+                velocity_x = -offset_x;
+            }
+            if (input.right)
+            {
+                velocity_x = +offset_x;
+            }
+            if (input.up && on_ground)
+            {
+                velocity_y = -5.0f;
+                on_ground = 0;
+            }
         }
-        if (input.right)
+
+        if (game_won == 0 && (player_x + playerWidth) >= flag_x)
         {
-            velocity_x = +offset_x;
-        }
-        if (input.up && on_ground)
-        {
-            velocity_y = -5.0f;
-            on_ground = 0;
+            game_won = 1;
+
+            SetWindowText(hwnd, L"YOU WON!");
         }
 
         player_x += velocity_x;
@@ -368,6 +459,16 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
         RenderGame();
 
+        frames_this_second++;
+        DWORD current_time = GetTickCount();
+
+        if (current_time - last_fps_time >= 1000)
+        {
+            current_fps = frames_this_second;
+            frames_this_second = 0;
+            last_fps_time = current_time;
+        }
+
         RECT client_rect;
         GetClientRect(hwnd, &client_rect);
         int window_width = client_rect.right - client_rect.left;
@@ -376,6 +477,25 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
         HDC hdc = GetDC(hwnd);
 
         Win32UpdateWindow(hdc, window_width, window_height);
+
+        SetBkMode(hdc, TRANSPARENT);
+
+        SetTextColor(hdc, RGB(255, 255, 255));
+
+        wchar_t fps_text[64];
+        int fps_len = wsprintf(fps_text, L"FPS: %d", current_fps);
+        TextOut(hdc, 10, 10, fps_text, fps_len);
+
+        wchar_t score_text[64];
+        int score_len = wsprintf(score_text, L"Score: %d", score);
+        TextOut(hdc, 10, 30, score_text, score_len);
+
+        if (game_won)
+        {
+            SetTextColor(hdc, RGB(255, 215, 0));
+            wchar_t win_text[] = L"YOU WON!";
+            TextOut(hdc, 396, 250, win_text, 8);
+        }
 
         ReleaseDC(hwnd, hdc);
     }
