@@ -11,3 +11,5 @@ AllowShortBlocksOnASingleLine: false
 AlignAfterOpenBracket: DontAlign
 AllowShortFunctionsOnASingleLine: Inline
 PointerAlignment: Left
+BinPackArguments: false
+BinPackParameters: false

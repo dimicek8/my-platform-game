@@ -9,6 +9,7 @@ void* buffer_memory;
 
 float player_x = 100;
 float player_y = 100;
+float camera_x = 0;
 
 int playerWidth = 30;
 int playerHeight = 30;
@@ -23,6 +24,7 @@ const float offset_y = 0.3f;
 const int backgroundColor = 0x000000;
 const int playerColor = 0x00FF00;
 const int platformColor = 0xFF0000;
+const int coinColor = 0xFFFF00;
 
 struct
 {
@@ -38,12 +40,32 @@ struct Platform
 };
 
 struct Platform platforms[] = {
-    {200, 400, 200, 30}, 
-    {500, 250, 150, 30}, 
-    {50, 300, 100, 30}, 
-    {600, 500, 200, 30}};
+    {200, 400, 200, 30},  //
+    {500, 250, 150, 30},  //
+    {50, 300, 100, 30},   //
+    {600, 500, 200, 30},  //
+    {1100, 150, 400, 30}, //
+    {800, 450, 300, 30},  //
+    {1300, 300, 200, 30}, //
+};
 
 int platform_count = sizeof(platforms) / sizeof(platforms[0]);
+
+struct Coin
+{
+    int x, y;
+    int active;
+};
+
+struct Coin coins[] = {
+    {300, 350, 1}, //
+    {550, 200, 1}, //
+    {900, 400, 1}, //
+    {1150, 300, 1} //
+};
+
+int coin_count = sizeof(coins) / sizeof(coins[0]);
+int score = 0;
 
 BITMAPINFO buffer_bitmap_info;
 
@@ -113,22 +135,48 @@ void RenderGame()
 
     for (int i = 0; i < platform_count; i++)
     {
-        DrawRect(platforms[i].x, platforms[i].y, platforms[i].width, platforms[i].height, platformColor);
+        DrawRect(platforms[i].x - camera_x, //
+            platforms[i].y,                 //
+            platforms[i].width,             //
+            platforms[i].height,            //
+            platformColor);                 //
     }
 
-    DrawRect((int)player_x, (int)player_y, playerWidth, playerHeight, playerColor);
+    for (int i = 0; i < coin_count; i++)
+    {
+        if (coins[i].active)
+        {
+            DrawRect(coins[i].x - (int)camera_x, //
+                coins[i].y,                      //
+                20,                              //
+                20,                              //
+                coinColor);                      //
+        }
+    }
+
+    DrawRect((int)player_x - camera_x, //
+        (int)player_y,                 //
+        playerWidth,                   //
+        playerHeight,                  //
+        playerColor);                  //
 }
 
 void Win32UpdateWindow(HDC device_context, int window_width, int window_height)
 {
-    StretchDIBits(                         //
-        device_context,                    //
-        0, 0, window_width, window_height, //
-        0, 0, buffer_width, buffer_height, //
-        buffer_memory,                     //
-        &buffer_bitmap_info,               //
-        DIB_RGB_COLORS,                    //
-        SRCCOPY                            //
+    StretchDIBits(      //
+        device_context, //
+        0,
+        0,
+        window_width,
+        window_height, //
+        0,
+        0,
+        buffer_width,
+        buffer_height,       //
+        buffer_memory,       //
+        &buffer_bitmap_info, //
+        DIB_RGB_COLORS,      //
+        SRCCOPY              //
     );
 }
 
@@ -239,7 +287,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
         {
             struct Platform p = platforms[i];
 
-            if (player_x + playerWidth > p.x && player_x < p.x + p.width &&
+            if (player_x + playerWidth > p.x && player_x < p.x + p.width && //
                 player_y + playerHeight > p.y && player_y < p.y + p.height)
             {
                 if (velocity_x > 0)
@@ -261,7 +309,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
         {
             struct Platform p = platforms[i];
 
-            if (player_x + playerWidth > p.x && player_x < p.x + p.width && 
+            if (player_x + playerWidth > p.x && player_x < p.x + p.width && //
                 player_y + playerHeight > p.y && player_y < p.y + p.height)
             {
                 if (velocity_y > 0)
@@ -278,6 +326,27 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
             }
         }
 
+        for (int i = 0; i < coin_count; i++)
+        {
+            if (coins[i].active == 0)
+            {
+                continue;
+            }
+
+            if (player_x + 30 > coins[i].x && //
+                player_x < coins[i].x + 20 && //
+                player_y + 30 > coins[i].y && //
+                player_y < coins[i].y + 20)
+            {
+                coins[i].active = 0;
+                score++;
+
+                char title[64];
+                wsprintf(title, L"My Platformer Score: %d", score);
+                SetWindowText(hwnd, title);
+            }
+        }
+
         if (player_y > 500)
         {
             player_y = 500;
@@ -289,9 +358,12 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
         {
             player_x = 0;
         }
-        if (player_x > 770)
+
+        camera_x = player_x - (main_window_width / 2);
+
+        if (camera_x < 0)
         {
-            player_x = 770;
+            camera_x = 0;
         }
 
         RenderGame();
